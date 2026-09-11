@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMMAAN - Online Admin Portal</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase Cloud DB Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+  <!-- Blurred Sky Image Background Layer -->
+  <div class="bg-sky-layer"></div>
+
+  <!-- Animated Background Canvas -->
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="admin-layout">
+    
+    <!-- Navbar Header -->
+    <header class="admin-navbar">
+      <div class="admin-brand">
+        <div class="admin-brand-icon">
+          <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div>
+          <h1 class="admin-brand-title">AMMAAN Admin Portal</h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Online Central Customer Licensing & Device Authorization</p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button id="btnOpenChangePassword" class="btn-action-sm" style="background: rgba(168, 85, 247, 0.25); border: 1px solid var(--color-purple); color: #ffffff; padding: 8px 14px; display: none; cursor: pointer;">
+          <i data-lucide="key" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+          <span>Change Password</span>
+        </button>
+
+        <div id="userInfoHeader" style="display: flex; align-items: center; gap: 10px;">
+          <!-- JS fills logged-in user email, role badge & logout button -->
+        </div>
+
+        <a href="app.html" target="_blank" class="btn-primary" style="padding: 9px 18px; font-size: 0.88rem; width: auto; text-decoration: none;">
+          <i data-lucide="external-link"></i>
+          <span>Open AMMAAN App</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- KPI Metric Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Total Registered Devices</span>
+          <i data-lucide="smartphone" style="color: var(--gold-primary);"></i>
+        </div>
+        <div class="kpi-value" id="kpiTotalDevices">0</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Active AMMAAN Licenses</span>
+          <i data-lucide="check-circle-2" style="color: var(--color-green);"></i>
+        </div>
+        <div class="kpi-value" id="kpiActiveDevices" style="color: var(--color-green);">0</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Expired Devices</span>
+          <i data-lucide="clock" style="color: var(--color-red);"></i>
+        </div>
+        <div class="kpi-value" id="kpiExpiredDevices" style="color: var(--color-red);">0</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Blocked / Suspended</span>
+          <i data-lucide="ban" style="color: var(--color-yellow);"></i>
+        </div>
+        <div class="kpi-value" id="kpiBlockedDevices" style="color: var(--color-yellow);">0</div>
+      </div>
+    </div>
+
+    <!-- Main Grid Content -->
+    <div class="admin-grid">
+      
+      <!-- Left Panel: Device Registration Form -->
+      <div class="card-box">
+        <div class="card-box-header">
+          <h2 class="card-box-title">
+            <i data-lucide="user-plus"></i>
+            <span>Register & Activate AMMAAN Device</span>
+          </h2>
+        </div>
+
+        <form id="formRegisterDevice">
+          <div class="form-group">
+            <label class="form-label">Customer Device ID (Pasted from App)</label>
+            <input type="text" class="form-control" id="inputDeviceId" placeholder="e.g. 9C2712ACDAC26A70" style="font-family: var(--font-mono); text-transform: uppercase;" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Customer Name</label>
+            <input type="text" class="form-control" id="inputCustomerName" placeholder="e.g. Abdi Hassan Jama" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Customer Phone Number</label>
+            <input type="text" class="form-control" id="inputCustomerPhone" placeholder="e.g. 252634449876" required>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="inputStartDate" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Expiry Date</label>
+              <input type="date" class="form-control" id="inputExpiryDate" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="margin-top: 10px;">
+            <i data-lucide="zap"></i>
+            <span>REGISTER & ACTIVATE LICENSE</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Panel: Customer Directory Table -->
+      <div class="card-box">
+        <div class="card-box-header">
+          <h2 class="card-box-title">
+            <i data-lucide="users"></i>
+            <span>Registered AMMAAN Customer Directory</span>
+          </h2>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Device ID</th>
+                <th>Time Left</th>
+                <th>Status</th>
+                <th>Expires On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="deviceTableBody">
+              <!-- JS dynamically renders rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Admin Footer -->
+    <div style="text-align: center; font-size: 0.8rem; color: var(--text-dim); margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+      © 2026 Higaali multiservice. All rights reserved. | AMMAAN Admin Portal
+    </div>
+
+  </div>
+
+  <!-- LOGIN AUTHENTICATION MODAL (WITH 2FA OTP) -->
+  <div class="login-modal-overlay active" id="loginModalOverlay">
+    <div class="login-card-box">
+      <div class="login-icon-circle">
+        <i data-lucide="lock" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 class="login-title">AMMAAN Admin Portal</h2>
+      <p class="login-subtitle">Sign in with Email, Password & 2FA OTP Code</p>
+
+      <!-- Credential helper box removed for security -->
+
+      <form id="formAdminLogin">
+        <div class="form-group">
+          <label class="form-label">Select Account Role</label>
+          <select class="form-control" id="loginRoleSelect">
+            <option value="SUPER_ADMIN">Super Admin (Full Root Permissions)</option>
+            <option value="ADMIN">Admin (Device Registration & Extensions)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-control" id="loginEmailInput" placeholder="Enter your email address" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="loginPasswordInput" placeholder="Enter your password" required>
+        </div>
+
+        <div class="form-group" id="loginOtpGroup" style="display: none; background: rgba(0, 229, 255, 0.08); border: 1px dashed var(--color-cyan); padding: 14px; border-radius: var(--radius-md); margin-top: 12px;">
+          <label class="form-label" style="color: var(--gold-primary); font-weight: 700; text-align: center;">📩 6-Digit Email OTP Verification Code</label>
+          <div style="font-size: 0.8rem; color: var(--color-green); text-align: center; margin-bottom: 8px; font-weight: 600;" id="loginOtpNoticeText">
+            ✓ OTP Code dispatched to registered Gmail address!
+          </div>
+          <input type="text" class="form-control" id="loginOtpInput" placeholder="Enter 6-digit OTP" maxlength="6" style="font-family: var(--font-mono); letter-spacing: 4px; text-align: center; font-size: 1.2rem; font-weight: 700;">
+        </div>
+
+        <button type="submit" class="btn-primary" id="btnLoginSubmitBtn" style="margin-top: 14px;">
+          <i data-lucide="log-in"></i>
+          <span id="btnLoginBtnText">LOGIN TO ADMIN PORTAL</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD & OTP VERIFICATION MODAL -->
+  <div class="login-modal-overlay" id="changePasswordModalOverlay">
+    <div class="login-card-box" style="max-width: 480px;">
+      <div class="login-icon-circle" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);">
+        <i data-lucide="key-round" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 class="login-title">Change Account Password</h2>
+      <p class="login-subtitle">An OTP verification code will be sent to <br><strong style="color: var(--color-cyan);" id="cpEmailDisplay">suhaybcaddaani444@gmail.com</strong></p>
+
+      <form id="formChangePassword">
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <input type="password" class="form-control" id="cpCurrentPassword" placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" class="form-control" id="cpNewPassword" placeholder="Enter new password" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <input type="password" class="form-control" id="cpConfirmPassword" placeholder="Confirm new password" required>
+        </div>
+
+        <div style="background: rgba(0, 229, 255, 0.1); border: 1px dashed var(--color-cyan); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px; text-align: center;">
+          <button type="button" class="btn-primary" id="btnSendOtp" style="background: linear-gradient(135deg, #a855f7 0%, #00e5ff 100%); padding: 8px 16px; font-size: 0.85rem; width: auto; margin: 0 auto 10px auto; cursor: pointer;">
+            📩 Send OTP Code to Email
+          </button>
+          <div id="otpSentNotification" style="font-size: 0.82rem; color: var(--color-green); font-weight: 600; display: none;">
+            ✓ OTP Code sent to email!
+          </div>
+        </div>
+
+        <div class="form-group" id="otpGroup" style="display: none;">
+          <label class="form-label" style="color: var(--gold-primary); font-weight: 700;">6-Digit OTP Verification Code</label>
+          <input type="text" class="form-control" id="cpOtpCode" placeholder="Enter 6-digit OTP code" maxlength="6" style="font-family: var(--font-mono); letter-spacing: 4px; text-align: center; font-size: 1.2rem; font-weight: 700;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button type="button" class="btn-action-sm btn-delete" id="btnCloseChangePassword" style="flex: 1; padding: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn-primary" id="btnSubmitChangePassword" style="flex: 2;" disabled>Verify OTP & Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EXTEND LICENSE CALENDAR MODAL -->
+  <div class="login-modal-overlay" id="extendCalendarModalOverlay">
+    <div class="login-card-box" style="max-width: 440px;">
+      <div class="login-icon-circle" style="background: linear-gradient(135deg, #00e676 0%, #00e5ff 100%);">
+        <i data-lucide="calendar" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 class="login-title">Extend AMMAAN License</h2>
+      <p class="login-subtitle" id="extendModalTargetDevice">Select new expiry date from calendar</p>
+
+      <form id="formCalendarExtend">
+        <input type="hidden" id="extendTargetDeviceId">
+        
+        <div class="form-group">
+          <label class="form-label">Current Expiry Date</label>
+          <input type="text" class="form-control" id="extendCurrentExpiryDisplay" readonly style="opacity: 0.7;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">New Calendar Expiry Date</label>
+          <input type="date" class="form-control" id="extendNewExpiryDate" required>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button type="button" class="btn-action-sm btn-delete" id="btnCloseExtendModal" style="flex: 1; padding: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex: 2;">SAVE NEW EXPIRY DATE</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="admin.js"></script>
+</body>
+</html>

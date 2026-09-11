@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMMAAN - Automated Payment Gateway</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Supabase Cloud DB Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Blurred Sky Image Background Layer -->
+  <div class="bg-sky-layer"></div>
+
+  <!-- Animated Background Canvas -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toastBox">
+    <span id="toastMsg">Notification message...</span>
+  </div>
+
+  <!-- Mobile Viewport Container -->
+  <div class="app-viewport">
+    
+    <!-- Header Bar: Info button on LEFT, Title in Center -->
+    <header class="app-header">
+      <button class="header-info-btn" id="btnInfoModal" title="About AMMAAN">
+        <i data-lucide="info" style="width: 18px;"></i>
+      </button>
+      <span class="header-title" id="headerTitle">AMMAAN</span>
+    </header>
+
+    <!-- Main Views Body -->
+    <main class="app-body">
+      
+      <!-- 1. HOME VIEW -->
+      <section class="view-tab active" id="view-home">
+        
+        <!-- CARD 1: AUTOMATION MODES (PLACED ABOVE LOG CARD AS REQUESTED) -->
+        <div class="card-panel">
+          <div class="card-top-row">
+            <span class="label-yellow" style="font-size: 0.8rem;">AUTOMATION MODES</span>
+            <i data-lucide="bell" style="width: 16px; color: var(--color-yellow);"></i>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-text">Bank Automation</span>
+            <label class="switch">
+              <input type="checkbox" id="toggleBankAutomation">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="toggle-text">Zaad Automation</span>
+            <label class="switch">
+              <input type="checkbox" id="toggleZaadAutomation" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- CARD 2: AUTOMATION LOG -->
+        <div class="card-panel card-log-banner">
+          <div class="card-top-row">
+            <div class="label-yellow">
+              <i data-lucide="bar-chart-2" style="width: 18px;"></i>
+              <span>AUTOMATION LOG</span>
+            </div>
+            <span id="btnToggleLogVisibility" style="cursor: pointer; display: inline-flex; align-items: center; padding: 4px;" title="Toggle Log Numbers Visibility">
+              <i id="eyeIcon" data-lucide="eye" style="color: var(--color-yellow); width: 18px; height: 18px;"></i>
+            </span>
+          </div>
+
+          <div class="metrics-flex">
+            <div class="metric-item">
+              <span class="metric-label">Detections</span>
+              <span class="metric-val-white" id="statDetections">98</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Last Amount</span>
+              <span class="metric-val-cyan" id="statLastAmount">$0.1</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Total Sum</span>
+              <span class="metric-val-white" id="statTotalSum">$462.70</span>
+            </div>
+          </div>
+
+          <button class="btn-reset-link" id="btnResetCounter">Reset Counter</button>
+          <div style="clear: both;"></div>
+        </div>
+
+        <!-- CARD 3: BALANCE CHECKER -->
+        <div class="card-panel">
+          <div class="label-pink">BALANCE CHECKER</div>
+
+          <div class="toggle-row">
+            <span class="toggle-text">Active Check Balance</span>
+            <label class="switch">
+              <input type="checkbox" id="toggleActiveCheckBalance">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <button class="btn-pink-balance" id="btnCheckBalanceNow">Check Balance Now!</button>
+        </div>
+
+        <!-- CARD 4: SUBSCRIPTION STATUS -->
+        <div class="card-panel">
+          <div class="label-cyan">SUBSCRIPTION STATUS</div>
+
+          <div class="device-row">
+            <div>
+              <span class="field-label" style="margin-bottom: 2px;">Device ID</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="device-id-text" id="textDeviceId">9C2712ACDAC26A70</span>
+                <i data-lucide="copy" style="width: 14px; color: var(--color-cyan); cursor: pointer;" id="btnCopyDeviceId"></i>
+              </div>
+            </div>
+
+            <div style="text-align: right;">
+              <span class="field-label" style="margin-bottom: 2px;">Time Left</span>
+              <span style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800;" id="textTimeLeft">17d 03h</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; font-size: 0.72rem; color: var(--text-dim); margin-top: 16px;">
+          © 2026 Higaali multiservice. All rights reserved.
+        </div>
+      </section>
+
+      <!-- 2. BANK AUTOMATION VIEW -->
+      <section class="view-tab" id="view-bank">
+        <div class="card-panel">
+          <form id="formBankAutomation">
+            <div class="input-field-group">
+              <label class="field-label">Service Code</label>
+              <div class="field-input-wrapper">
+                <input type="text" id="bankServiceCode" value="806" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Account Number</label>
+              <div class="field-input-wrapper">
+                <input type="text" id="bankAccountNum" value="633111999" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Bank PIN 1</label>
+              <div class="field-input-wrapper">
+                <input type="password" id="bankPin1" value="5566" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Bank PIN 2</label>
+              <div class="field-input-wrapper">
+                <input type="password" id="bankPin2" value="7788" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-save-cyan">SAVE ALL DATA</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 3. ZAAD AUTOMATION VIEW -->
+      <section class="view-tab" id="view-zaad">
+        <div class="card-panel">
+          <form id="formZaadAutomation">
+            <div class="input-field-group">
+              <label class="field-label">Service Code</label>
+              <div class="field-input-wrapper">
+                <input type="text" id="zaadServiceCode" value="806" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Merchant/Account Number</label>
+              <div class="field-input-wrapper">
+                <input type="text" id="zaadMerchantAccount" value="5844950" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Zaad PIN 1</label>
+              <div class="field-input-wrapper">
+                <input type="password" id="zaadPin1" value="4455" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label class="field-label">Zaad PIN 2</label>
+              <div class="field-input-wrapper">
+                <input type="password" id="zaadPin2" value="1234" required>
+                <i data-lucide="pencil" class="pencil-icon"></i>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-save-green">SAVE ALL DATA</button>
+          </form>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <a class="nav-item active" data-tab="home">
+        <i data-lucide="home" style="width: 20px;"></i>
+        <span>Home</span>
+      </a>
+      <a class="nav-item" data-tab="bank">
+        <i data-lucide="building-2" style="width: 20px;"></i>
+        <span>Bank</span>
+      </a>
+      <a class="nav-item" data-tab="zaad">
+        <i data-lucide="smartphone" style="width: 20px;"></i>
+        <span>Zaad</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- ABOUT MODAL POPUP -->
+  <div class="about-modal-overlay" id="aboutModal">
+    <div class="about-card-box">
+      <div class="about-header-row">
+        <div class="about-icon-cyan">
+          <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+        </div>
+        <span class="about-title">About</span>
+      </div>
+
+      <p class="about-copyright">© 2026 Higaali multiservice. All rights reserved.</p>
+
+      <div class="about-section-label">Contact Support:</div>
+
+      <a href="https://wa.me/252633111555" target="_blank" class="whatsapp-contact-link" title="Chat on WhatsApp">
+        <span class="whatsapp-phone-text">+252 63 3111555</span>
+        <div class="whatsapp-chat-icon">
+          <i data-lucide="message-square" style="width: 18px; height: 18px;"></i>
+        </div>
+      </a>
+
+      <div class="about-version-label">Build Version</div>
+      <div class="about-version-val">ZAAD-V1-2024-X</div>
+
+      <button class="btn-about-close" id="btnCloseAboutModal">Close</button>
+    </div>
+  </div>
+
+  <!-- Interactive 2-Step USSD Modal Simulator -->
+  <div class="ussd-modal-overlay" id="ussdModal">
+    <div class="ussd-dialog-box">
+      <div class="ussd-dialog-title" id="ussdModalTitle">USSD Prompt (Step 2)</div>
+      <div class="ussd-dialog-text" id="ussdModalText">
+        Suxeed: Geli PIN-ka 2aad si aad u dhameystirto $25.00 wareejinta...
+      </div>
+      <input type="password" class="ussd-dialog-input" id="ussdModalInput" value="1234">
+      <div class="ussd-dialog-actions">
+        <button class="btn-save-cyan" style="padding: 6px 14px; width: auto; margin: 0;" id="btnCancelUssdModal">Cancel</button>
+        <button class="btn-save-green" style="padding: 6px 14px; width: auto; margin: 0;" id="btnSubmitUssdModal">Auto-Submit PIN 2</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UN-BYPASSABLE SUBSCRIPTION LOCK OVERLAY -->
+  <div class="lock-screen-overlay" id="lockScreenOverlay">
+    <div class="lock-card-box">
+      <div class="lock-icon-circle">
+        <i data-lucide="lock" style="width: 32px; height: 32px;"></i>
+      </div>
+      <h2 class="lock-title">Subscription Required</h2>
+      <p class="lock-msg" id="lockScreenMsg">
+        ⚠️ AMMAAN ma shaqayn karo subscription la'aantiis! Fadlan Device ID-gaaga u dir Adminka si diwaan-gelin iyo ogolaansho laguugu siiyo.
+      </p>
+
+      <div class="lock-device-box">
+        <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">YOUR UNIQUE DEVICE ID</div>
+        <div style="font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; color: var(--color-cyan);" id="lockDeviceIdText">9C2712ACDAC26A70</div>
+      </div>
+
+      <button class="btn-lock-copy" id="btnLockCopyId">
+        <i data-lucide="copy"></i>
+        <span>COPY DEVICE ID TO ADMIN</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Application Logic JS -->
+  <script src="app.js"></script>
+</body>
+</html>
