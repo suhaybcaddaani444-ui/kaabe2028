@@ -76,10 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
     timeLeft: 'Expired',
     customerInfo: null,
     zaad: {
-      serviceCode: '806',
-      merchantAccount: '5844950',
-      pin1: '4455',
-      pin2: '1234'
+      serviceCode: '',
+      merchantAccount: '',
+      pin1: '',
+      pin2: ''
     },
     bank: {
       serviceCode: '806',
