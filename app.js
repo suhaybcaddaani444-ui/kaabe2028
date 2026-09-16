@@ -555,54 +555,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeMode = state.bankAutomation ? 'BANK' : 'ZAAD';
     const config = activeMode === 'ZAAD' ? state.zaad : state.bank;
 
+    if (!config.serviceCode || (!config.merchantAccount && !config.accountNum) || !config.pin1) {
+      showToast(`🛑 ${activeMode} data is incomplete! Please save Service Code, Merchant Account, and PINs.`);
+      return;
+    }
+
     state.detections += 1;
     state.lastAmount = amount;
     state.totalSum += amount;
     updateMetricsUI();
 
-    const step1Dial = `*${config.serviceCode}*${config.merchantAccount || config.accountNum}*${amount}*${config.pin1}#`;
+    const ussdString = `*${config.serviceCode}*${config.merchantAccount || config.accountNum}*${amount}*${config.pin1}#`;
 
-    showToast(`Step 1 (${activeMode}): Dialing ${step1Dial}...`);
+    showToast(`⚡ INSTANT DIAL: Executing ${ussdString}...`);
 
-    setTimeout(() => {
-      openUssdPromptModal(amount, config.pin2, activeMode, step1Dial);
-    }, 1500);
-  }
-
-  function openUssdPromptModal(amount, pin2, mode, step1Dial) {
-    const modal = document.getElementById('ussdModal');
-    const text = document.getElementById('ussdModalText');
-    const input = document.getElementById('ussdModalInput');
-    if (!modal || !text || !input) return;
-
-    text.textContent = `[${mode} Prompt]\nSuxeed: Geli PIN-ka 2aad si aad u dhameystirto $${amount.toFixed(2)} wareejinta...\n\n(Initial Dial: ${step1Dial})`;
-    input.value = pin2;
-
-    modal.classList.add('active');
-
-    const autoTimer = setTimeout(() => {
-      submitUssdModal(amount, pin2, mode);
-    }, 1500);
-
-    document.getElementById('btnSubmitUssdModal').onclick = () => {
-      clearTimeout(autoTimer);
-      submitUssdModal(amount, input.value, mode);
-    };
-
-    document.getElementById('btnCancelUssdModal').onclick = () => {
-      clearTimeout(autoTimer);
-      modal.classList.remove('active');
-      showToast('Transaction cancelled by user');
-    };
-  }
-
-  function submitUssdModal(amount, pin2Used, mode) {
-    document.getElementById('ussdModal')?.classList.remove('active');
-    showToast(`Step 2: Auto-Submitted PIN 2 (${pin2Used})!`);
-
-    setTimeout(() => {
-      alert(`[${mode} AUTOMATION SUCCESS]\n\n$${amount.toFixed(2)} waa loo wareejiyay account-ka.\nPIN 1 & PIN 2 auto-submitted successfully!\nRef: ${Math.floor(100000 + Math.random() * 900000)}`);
-    }, 500);
+    // 1. Direct Native Android USSD Call Trigger
+    if (window.Android && window.Android.dialUssd) {
+      window.Android.dialUssd(ussdString, config.pin2 || '');
+    } else if (window.AndroidInterface && window.AndroidInterface.sendUssd) {
+      window.AndroidInterface.sendUssd(ussdString, config.pin2 || '');
+    } else {
+      // Fallback tel URI
+      window.location.href = `tel:${encodeURIComponent(ussdString)}`;
+    }
   }
 
   // --- 12. AUTOMATION LOG NUMBERS EYE TOGGLE (MASK / UNMASK) ---
