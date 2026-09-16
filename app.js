@@ -173,33 +173,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function syncDeviceFromCloud() {
-    if (!supabase) return;
     try {
-      const { data, error } = await supabase
-        .from('devices')
-        .select('*')
-        .eq('device_id', state.deviceId)
-        .maybeSingle();
+      const res = await fetch('https://api.restful-api.dev/objects');
+      if (!res.ok) return;
+      const items = await res.json();
+      if (!Array.isArray(items)) return;
 
-      if (!error && data) {
+      const matched = items.find(item => item.name === 'AMMAAN_DEV_' + state.deviceId || (item.data && item.data.deviceId === state.deviceId));
+      if (matched && matched.data) {
+        const d = matched.data;
         const db = getLicenseDb();
         db[state.deviceId] = {
-          deviceId: data.device_id,
-          name: data.customer_name,
-          phone: data.phone,
-          registeredAt: data.registered_at,
-          expiryTimestamp: Number(data.expiry_timestamp),
-          status: data.status
+          deviceId: d.deviceId,
+          name: d.name,
+          phone: d.phone,
+          registeredAt: d.registeredAt,
+          expiryTimestamp: Number(d.expiryTimestamp),
+          status: d.status
         };
         saveLicenseDb(db);
         verifyLicenseStatus();
-      } else if (!error && !data) {
-        const db = getLicenseDb();
-        if (db[state.deviceId]) {
-          delete db[state.deviceId];
-          saveLicenseDb(db);
-          verifyLicenseStatus();
-        }
       }
     } catch (e) {
       console.warn('Cloud sync fetch error:', e);
