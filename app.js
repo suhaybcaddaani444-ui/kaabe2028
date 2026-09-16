@@ -225,6 +225,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // --- MASTER ACTIVATION PIN UNLOCK HANDLER ---
+  const MASTER_ACTIVATION_PIN = '381690';
+  document.getElementById('btnActivateMasterPin')?.addEventListener('click', () => {
+    const inputPin = document.getElementById('inputMasterPin')?.value.trim();
+    if (!inputPin) {
+      showToast('⚠️ Please enter Master PIN!');
+      return;
+    }
+    if (inputPin === MASTER_ACTIVATION_PIN) {
+      const db = getLicenseDb();
+      const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+      db[state.deviceId] = {
+        deviceId: state.deviceId,
+        name: 'VIP Customer',
+        phone: 'Local Activation',
+        registeredAt: new Date().toISOString(),
+        expiryTimestamp: Date.now() + oneYearMs,
+        status: 'ACTIVE'
+      };
+      saveLicenseDb(db);
+      verifyLicenseStatus();
+      showToast('🎉 AMMAAN App Activated Successfully for 1 Year!');
+    } else {
+      showToast('❌ Incorrect Master PIN! Try 381690');
+    }
+  });
+
   // --- 2. DYNAMIC CANVAS ANIMATION ---
   initCanvas();
 
