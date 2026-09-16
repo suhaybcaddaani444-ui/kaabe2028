@@ -400,33 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const pin1 = state.zaad.pin1;
     const dialCode = `*801#`;
-    showToast(`🔄 Active Check Loop: Calling ${dialCode} -> Entering PIN 1 (${pin1})...`);
-
-    // Simulate *801# USSD call + auto PIN 1 entry
-    setTimeout(() => {
-      if (!state.activeCheckBalance) return;
-
-      // Simulate returned balance result (e.g., $462.70 or random test balance)
-      const simulatedBalance = Math.random() > 0.3 ? 462.70 : 0.05;
-
-      showToast(`*801# Result: Balance = $${simulatedBalance.toFixed(2)}`);
-
-      // CONDITION: If balance > $0.10 -> Auto-Transfer & STOP LOOP!
-      if (simulatedBalance > 0.10) {
-        showToast(`⚡ Balance > $0.1 Detected ($${simulatedBalance.toFixed(2)})! Executing Transfer & Stopping Loop...`);
-        
-        // Execute automatic transfer
-        executeTwoStepUssdTransfer(simulatedBalance, true);
-
-        // STOP THE LOOP AUTOMATICALLY
-        state.activeCheckBalance = false;
-        if (toggleActiveCheckBalance) toggleActiveCheckBalance.checked = false;
-        showToast(`✅ Transfer Triggered & Active Check Balance Loop STOPPED!`);
-      } else {
-        // Balance <= 0.10 -> Continue looping after delay
-        activeCheckTimer = setTimeout(runActiveCheckBalanceLoopStep, 7000);
-      }
-    }, 2000);
+    showToast(`🔄 Active SMS Detection ACTIVE: Listening for real payment notifications (*801# / SMS)...`);
   }
 
   // --- 6. ONE-TIME "CHECK BALANCE NOW!" SINGLE QUERY BUTTON ---
@@ -541,6 +515,21 @@ document.addEventListener('DOMContentLoaded', () => {
       amount: extractedAmount
     };
   }
+
+  // --- REAL INCOMING SMS AUTOMATION TRIGGER BRIDGE ---
+  window.onIncomingSMS = function(sender, messageBody) {
+    if (!state.isAppUnlocked) {
+      console.warn("App locked. Ignoring incoming SMS.");
+      return;
+    }
+    const parsed = parseIncomingSms(sender || '898', messageBody || '');
+    if (parsed.success) {
+      showToast(`📩 REAL PAYMENT SMS DETECTED! From: ${parsed.sender} | Amount: $${parsed.amount}`);
+      executeTwoStepUssdTransfer(parsed.amount);
+    } else {
+      console.warn("SMS ignored:", parsed.reason);
+    }
+  };
 
   document.getElementById('btnRunTestAutomation')?.addEventListener('click', () => {
     const amt = parseFloat(document.getElementById('testPaymentAmt').value) || 25.00;
