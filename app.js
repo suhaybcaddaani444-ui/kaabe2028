@@ -66,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Application State
   const state = {
     isAppUnlocked: false,
-    detections: 98,
-    lastAmount: 0.1,
-    totalSum: 462.70,
+    detections: 0,
+    lastAmount: 0.00,
+    totalSum: 0.00,
     bankAutomation: false,
     zaadAutomation: true,
     activeCheckBalance: false,
@@ -493,12 +493,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return { success: false, reason: `Trigger Keyword missing from SMS` };
     }
 
-    // 3. Extract Amount ($25.00, $0.10, 10.5 USD)
-    let extractedAmount = 0.1;
-    const match = messageBody.match(state.smsConfig.amountRegex);
-    if (match) {
-      const numStr = match[0].replace(/[^0-9.]/g, '');
-      extractedAmount = parseFloat(numStr) || 0.1;
+    // 3. Extract Amount ($5, $1, $0.5, $25.00, etc.)
+    let extractedAmount = 0;
+    const match = messageBody.match(/\$\s*(\d+(\.\d+)?)/i);
+    if (match && match[1]) {
+      extractedAmount = parseFloat(match[1]);
+    } else {
+      const matchFallback = messageBody.match(/(\d+(\.\d+)?)\s*\$/i);
+      if (matchFallback && matchFallback[1]) {
+        extractedAmount = parseFloat(matchFallback[1]);
+      }
+    }
+
+    if (!extractedAmount || isNaN(extractedAmount)) {
+      return { success: false, reason: `Could not extract valid dollar amount` };
     }
 
     return {
